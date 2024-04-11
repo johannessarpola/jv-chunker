@@ -45,6 +45,7 @@ public class SplitterBoyo implements Callable<List<String>> {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             int byteRead;
             short threadNumber = 0;
+
             while ((byteRead = fis.read()) != -1) {
                 byteArrayOutputStream.write(byteRead);
 
@@ -52,8 +53,7 @@ public class SplitterBoyo implements Callable<List<String>> {
                 if (chunk.remainingCapacity() == 0) {
                     threadNumber++;
                     var wb = this.createWriter(chunk, this.file, threadNumber);
-                    var f = this.threadPoolExecutor.submit(wb);
-                    fus.add(f);
+                    this.queueWriter(wb, fus);
                     chunk = new LinkedBlockingDeque<>(this.chunkSize);
                 }
 
@@ -63,6 +63,12 @@ public class SplitterBoyo implements Callable<List<String>> {
                     byteArrayOutputStream.reset();
                 }
             }
+
+            // write the tail
+            var arr = byteArrayOutputStream.toByteArray();
+            chunk.add(arr);
+            var wb = this.createWriter(chunk, this.file, ++threadNumber);
+            this.queueWriter(wb, fus);
 
         } catch (Exception e) {
             // Handle exceptions
@@ -88,6 +94,10 @@ public class SplitterBoyo implements Callable<List<String>> {
     }
 
 
+    private void queueWriter(WriterBoyo wb, List<Future<Path>> fus) {;
+        var f = this.threadPoolExecutor.submit(wb);
+        fus.add(f);
+    }
     private <T> WriterBoyo createWriter(Deque<byte[]> chunk, Path fileName, short threadNumber) {
         var fn = fileName.getFileName().toString();
         var base = fn.substring(0, fn.lastIndexOf('.'));
