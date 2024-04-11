@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package chunker;
+package org.example;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Johannes töissä
  */
-public class CustomFileReader {
+public class FileReaderBoyo {
 
     public static String fileContentToString(String filepath) throws IOException {
         Path p = Paths.get(filepath);
@@ -71,7 +71,6 @@ public class CustomFileReader {
 
     /**
      * Merges files from
-     * http://www.programcreek.com/2012/09/merge-files-in-java/
      *
      * @param files
      * @param mergedFile
@@ -145,33 +144,6 @@ public class CustomFileReader {
         System.out.println("Total number of created chunks is :" + j);
 
     }
-
-    /*    public static void createChunksNIO() {
-     try {
-     RandomAccessFile aFile = new RandomAccessFile(getInputFolder() + getFilename(), "r");
-     FileChannel inChannel = aFile.getChannel();
-     ByteBuffer buffer = ByteBuffer.allocate(getBufferSize());
-     int i = 0;
-     while (inChannel.read(buffer) > 0) {
-     buffer.flip();
-     writeChunk(buffer, i);
-     i++;
-     buffer.clear();
-     }
-     inChannel.close();
-     aFile.close();
-     } catch (FileNotFoundException ex) {
-     Logger.getLogger(ChunkerRunner.class.getName()).log(Level.SEVERE, null, ex);
-     } catch (IOException ex) {
-     Logger.getLogger(ChunkerRunner.class.getName()).log(Level.SEVERE, null, ex);
-     }
-     }*/
-   /* public static void writeChunk(byte[] bb, String outputFile) throws IOException {
-        BufferedWriter bw = new BufferedWriter(new PrintWriter(outputFile, "UTF-8"));
-        String chunk = new String(bb, StandardCharsets.UTF_8);
-        bw.write(chunk);
-        bw.close();
-    }*/
 
     public static void writeChunk(ByteBuffer bb, String outputFile) throws IOException {
         bb.flip();
