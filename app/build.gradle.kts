@@ -17,6 +17,8 @@ repositories {
 
 dependencies {
     compileOnly("org.projectlombok:lombok:1.18.32")
+
+    implementation("commons-cli:commons-cli:1.6.0")
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
 

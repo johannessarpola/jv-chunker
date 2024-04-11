@@ -18,6 +18,9 @@ public class App {
         long statTime = System.currentTimeMillis();
         long endTime = 0;
 
+
+
+
         /**
          * Sketch:
          * - take in input folder
