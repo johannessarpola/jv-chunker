@@ -43,21 +43,15 @@ public class SplitterBoyo implements Callable<List<String>> {
             // Split into smaller files
             // -> Create WriterBoyo to write the chunk
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            int byteRead; short threadNumber = 0;
+            int byteRead;
+            short threadNumber = 0;
             while ((byteRead = fis.read()) != -1) {
                 byteArrayOutputStream.write(byteRead);
 
                 // Send the chunk to writer
                 if (chunk.remainingCapacity() == 0) {
                     threadNumber++;
-
-                    var fn = this.file.getFileName().toString();
-                    var base = fn.substring(0, fn.lastIndexOf('.'));
-                    var ext = fn.substring(fn.lastIndexOf('.') + 1);
-
-
-                    var nfn = String.format("%s_%d.%s", base, threadNumber, ext);
-                    var wb = new WriterBoyo(chunk, this.outputPath, nfn);
+                    var wb = this.createWriter(chunk, this.file, threadNumber);
                     var f = this.threadPoolExecutor.submit(wb);
                     fus.add(f);
                     chunk = new LinkedBlockingDeque<>(this.chunkSize);
@@ -65,7 +59,7 @@ public class SplitterBoyo implements Callable<List<String>> {
 
                 // TODO There's no failsafe if there is no \n in the input
                 if (byteRead == '\n') {
-                    chunk.push(byteArrayOutputStream.toByteArray());
+                    chunk.add(byteArrayOutputStream.toByteArray());
                     byteArrayOutputStream.reset();
                 }
             }
@@ -91,5 +85,15 @@ public class SplitterBoyo implements Callable<List<String>> {
         }
 
         return rs;
+    }
+
+
+    private <T> WriterBoyo createWriter(Deque<byte[]> chunk, Path fileName, short threadNumber) {
+        var fn = fileName.getFileName().toString();
+        var base = fn.substring(0, fn.lastIndexOf('.'));
+        var ext = fn.substring(fn.lastIndexOf('.') + 1);
+        var nfn = String.format("%s_%d.%s", base, threadNumber, ext);
+        var wb = new WriterBoyo(chunk, this.outputPath, nfn);
+        return wb;
     }
 }
