@@ -17,6 +17,10 @@ repositories {
 
 dependencies {
     compileOnly("org.projectlombok:lombok:1.18.32")
+    annotationProcessor("org.projectlombok:lombok:1.18.32")
+    testCompileOnly("org.projectlombok:lombok:1.18.32")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.32")
+
 
     implementation("commons-cli:commons-cli:1.6.0")
     // Use JUnit Jupiter for testing.

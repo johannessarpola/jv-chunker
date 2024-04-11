@@ -8,18 +8,18 @@ import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 @Data
-@Builder
 public class WriterBoyo implements Callable<Path> {
     private Path outputPath;
-    private Iterator<byte[]> source;
+    private Deque<byte[]> source;
     private ProgressBoyo pb = new ProgressBoyo();
 
-    public WriterBoyo(Iterator<byte[]> source, String path, String... paths) {
+    public WriterBoyo(Deque<byte[]> source, String path, String... paths) {
         this.source = source;
         this.outputPath = Paths.get(path, paths);
     }
@@ -33,9 +33,9 @@ public class WriterBoyo implements Callable<Path> {
         }
 
         var fos = new FileOutputStream(this.outputPath.toFile());
-        while(this.source.hasNext()) {
-            var next = source.next();
-            fos.write(next);
+        byte[] b;
+        while((b = source.poll()) != null) {
+            fos.write(b);
             pb.tick();
         }
         fos.close();
