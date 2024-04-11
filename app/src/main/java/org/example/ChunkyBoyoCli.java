@@ -45,7 +45,7 @@ public class ChunkyBoyoCli {
     public ChunkyBoyoConfig Configuration() {
         var bldr = ChunkyBoyoConfig.builder();
 
-        String sv, int i;
+        String sv; int i;
         if (cmd.hasOption("bufferSize")) {
             sv = cmd.getOptionValue("bufferSize");
             i = Integer.parseInt(sv);
