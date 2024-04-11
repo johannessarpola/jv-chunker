@@ -24,7 +24,7 @@ public class WriterBoyo implements Callable<Path> {
         this.outputPath = Paths.get(path, paths);
 
         // todo rm
-        Printer.println("writing to {}", this.outputPath);
+        Printer.println("writing to %s", this.outputPath);
     }
 
     @Override

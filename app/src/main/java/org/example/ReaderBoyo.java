@@ -10,9 +10,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Builder
 @AllArgsConstructor
@@ -20,6 +22,7 @@ public class ReaderBoyo implements Callable<List<String>> {
 
     private final ChunkyBoyoConfig config;
     private ExecutorService threadPoolExecutor;
+
     @Override
     public List<String> call() throws Exception {
         List<Future<List<String>>> fus = new ArrayList<>();
@@ -48,12 +51,10 @@ public class ReaderBoyo implements Callable<List<String>> {
             e.printStackTrace();
         }
 
-        for(var f : fus) {
-            // TODO
-            Printer.println(f.get());
-        }
-
-        // TODO
-        return new ArrayList<>();
+        return fus.stream()
+                .map(FutureUtils::getFutureResult)
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 }
