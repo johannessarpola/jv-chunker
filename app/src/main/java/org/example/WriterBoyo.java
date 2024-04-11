@@ -17,14 +17,16 @@ import java.util.function.Supplier;
 public class WriterBoyo implements Callable<Path> {
     private Path outputPath;
     private Deque<byte[]> source;
-    private ProgressBoyo pb = new ProgressBoyo();
+    private ProgressBoyo pb;
 
     public WriterBoyo(Deque<byte[]> source, String path, String... paths) {
         this.source = source;
         this.outputPath = Paths.get(path, paths);
-
-        // todo rm
-        Printer.println("writing to %s", this.outputPath);
+        int checkPoints = Math.max(2, source.size() / 2);
+        pb = ProgressBoyo
+                .builder()
+                .nCheckpoint(checkPoints)
+                .build();
     }
 
     @Override

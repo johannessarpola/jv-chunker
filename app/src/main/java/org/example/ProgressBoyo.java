@@ -12,9 +12,12 @@ import lombok.NoArgsConstructor;
 public class ProgressBoyo {
     // TODO configure logger or whatever output stream at some point
 
+    @Builder.Default
     private long n = 0;
+    @Builder.Default
     private long nCheckpoint = 10_000;
-    private String messageFormat = "written {} lines on {} thread";
+    @Builder.Default
+    private String messageFormat = "written %d lines on %s thread";
     void tick() {
         n += 1;
         if(n % nCheckpoint == 0) {
@@ -23,6 +26,6 @@ public class ProgressBoyo {
     }
 
     private void progressCheckpoint(long n) {
-        Printer.println(messageFormat, n, Thread.currentThread());
+        Printer.println(messageFormat, n, Thread.currentThread().getName());
     }
 }

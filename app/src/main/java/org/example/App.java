@@ -11,15 +11,8 @@ import java.util.stream.Collectors;
 import static java.lang.System.exit;
 
 public class App {
-    public static String getGreeting() {
-        return "Hello World!";
-    }
-
-
     public static void main(String[] args) throws IOException {
-        System.out.println(getGreeting());
         long statTime = System.currentTimeMillis();
-        long endTime = 0;
 
         var cli = new ChunkyBoyoCli(args);
         var conf = cli.asConfiguration();
@@ -30,6 +23,7 @@ public class App {
         try {
             var l = f.get();
             Printer.println("Wrote following files: %s", String.join(",", l));
+            Printer.println("Took %d ms", System.currentTimeMillis() - statTime);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         } finally {
