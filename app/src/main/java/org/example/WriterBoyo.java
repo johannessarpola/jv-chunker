@@ -22,6 +22,9 @@ public class WriterBoyo implements Callable<Path> {
     public WriterBoyo(Deque<byte[]> source, String path, String... paths) {
         this.source = source;
         this.outputPath = Paths.get(path, paths);
+
+        // todo rm
+        Printer.println("writing to {}", this.outputPath);
     }
 
     @Override
@@ -32,7 +35,7 @@ public class WriterBoyo implements Callable<Path> {
             Files.createDirectory(this.outputPath.getParent());
         }
 
-        var fos = new FileOutputStream(this.outputPath.toFile());
+        var fos = new FileOutputStream(this.outputPath.toFile(), false);
         byte[] b;
         while((b = source.poll()) != null) {
             fos.write(b);

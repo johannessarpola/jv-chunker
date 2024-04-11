@@ -98,3 +98,4 @@ lib/
 # Ignore Gradle build output directory
 build
 *.iml
+.out/

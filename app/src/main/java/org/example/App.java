@@ -5,7 +5,6 @@ package org.example;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.exit;
@@ -22,12 +21,7 @@ public class App {
         long endTime = 0;
 
         var cli = new ChunkyBoyoCli(args);
-        var conf = cli.Configuration();
-
-        // TODO remove
-        conf.setRowsize(10);
-        conf.setBufferSize(10);
-
+        var conf = cli.asConfiguration();
         var ec = Executors.newFixedThreadPool(10);
         var sb = new ReaderBoyo(conf, ec);
         var f = ec.submit(sb);

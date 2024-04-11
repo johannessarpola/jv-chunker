@@ -33,9 +33,10 @@ public class ReaderBoyo implements Callable<List<String>> {
                     System.out.println("File: " + filePath.getFileName());
                     var sb = SplitterBoyo
                             .builder()
+                            .chunkSize(this.config.getChunkSize())
                             .threadPoolExecutor(this.threadPoolExecutor)
                             .file(filePath)
-                            .outputPath(this.config.outputFolder)
+                            .outputPath(this.config.getOutputFolder())
                             .build();
 
                     var f = this.threadPoolExecutor.submit(sb);

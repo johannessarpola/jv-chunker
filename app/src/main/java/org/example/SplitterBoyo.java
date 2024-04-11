@@ -43,24 +43,30 @@ public class SplitterBoyo implements Callable<List<String>> {
             // Split into smaller files
             // -> Create WriterBoyo to write the chunk
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            int byteRead; int counter = 0; short threadNumber = 0;
+            int byteRead; short threadNumber = 0;
             while ((byteRead = fis.read()) != -1) {
                 byteArrayOutputStream.write(byteRead);
+
+                // Send the chunk to writer
+                if (chunk.remainingCapacity() == 0) {
+                    threadNumber++;
+
+                    var fn = this.file.getFileName().toString();
+                    var base = fn.substring(0, fn.lastIndexOf('.'));
+                    var ext = fn.substring(fn.lastIndexOf('.') + 1);
+
+
+                    var nfn = String.format("%s_%d.%s", base, threadNumber, ext);
+                    var wb = new WriterBoyo(chunk, this.outputPath, nfn);
+                    var f = this.threadPoolExecutor.submit(wb);
+                    fus.add(f);
+                    chunk = new LinkedBlockingDeque<>(this.chunkSize);
+                }
 
                 // TODO There's no failsafe if there is no \n in the input
                 if (byteRead == '\n') {
                     chunk.push(byteArrayOutputStream.toByteArray());
                     byteArrayOutputStream.reset();
-                    counter++;
-                }
-
-                // Send the chunk to writer
-                if (counter == this.chunkSize) {
-                    threadNumber++;
-                    var wb = new WriterBoyo(chunk, this.file.toString(), String.valueOf(threadNumber));
-                    var f = this.threadPoolExecutor.submit(wb);
-                    fus.add(f);
-                    chunk = new LinkedBlockingDeque<>(this.chunkSize);
                 }
             }
 

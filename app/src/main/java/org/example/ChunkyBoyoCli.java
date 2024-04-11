@@ -14,17 +14,23 @@ public class ChunkyBoyoCli {
         options.addOption(Option.builder("i")
                 .hasArg(true)
                 .longOpt("input")
-                .option("i")
                 .desc("input folder use --input or -i")
                 .required(true)
                 .build());
         options.addOption(Option.builder("o")
                 .longOpt("output")
-                .option("o")
                 .hasArg(true)
                 .desc("output folder use --output or -o")
                 .required()
                 .build());
+        options.addOption(Option.builder("cs")
+                .longOpt("chunkSize")
+                .hasArg(true)
+                .desc("chunks to divide to use --chunkSize or -cs")
+                .required()
+                .build());
+
+
 
         // TODO add rest stuff
 
@@ -39,25 +45,19 @@ public class ChunkyBoyoCli {
     }
 
 
-    public ChunkyBoyoConfig Configuration() {
+    public ChunkyBoyoConfig asConfiguration() {
         var bldr = ChunkyBoyoConfig.builder();
 
         String sv;
         int i;
-        if (cmd.hasOption("bs")) {
-            sv = cmd.getOptionValue("bufferSize");
+        if (cmd.hasOption("cs")) {
+            sv = cmd.getOptionValue("cs");
             i = Integer.parseInt(sv);
-            bldr.bufferSize(i);
-        }
-
-        if (cmd.hasOption("rs")) {
-            sv = cmd.getOptionValue("rowSize");
-            i = Integer.parseInt(sv);
-            bldr.rowsize(i);
+            bldr.chunkSize(i);
         }
 
         if (cmd.hasOption("i")) {
-            bldr.outputFolder(cmd.getOptionValue("i"));
+            bldr.inputFolder(cmd.getOptionValue("i"));
         }
 
         if (cmd.hasOption("o")) {

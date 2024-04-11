@@ -10,8 +10,7 @@ import java.nio.file.Paths;
 @Builder
 @AllArgsConstructor
 public class ChunkyBoyoConfig {
-    int bufferSize; // For NIO 100 mb
-    int rowsize; // For IO
+    int chunkSize;
     String outputFolder;
     String inputFolder;
 
