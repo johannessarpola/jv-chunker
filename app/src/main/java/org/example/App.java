@@ -23,6 +23,11 @@ public class App {
 
         var cli = new ChunkyBoyoCli(args);
         var conf = cli.Configuration();
+
+        // TODO remove
+        conf.setRowsize(10);
+        conf.setBufferSize(10);
+
         var ec = Executors.newFixedThreadPool(10);
         var sb = new ReaderBoyo(conf, ec);
         var f = ec.submit(sb);

@@ -12,27 +12,24 @@ public class ChunkyBoyoCli {
     public ChunkyBoyoCli(String[] args) {
 
         options.addOption(Option.builder("i")
-                .longOpt("interactionId")
                 .hasArg(true)
-                .desc("interaction id ([REQUIRED] or use --clientId)")
-                .required(false)
+                .longOpt("input")
+                .option("i")
+                .desc("input folder use --input or -i")
+                .required(true)
                 .build());
-        options.addOption(Option.builder("c")
-                .longOpt("clientId")
+        options.addOption(Option.builder("o")
+                .longOpt("output")
+                .option("o")
                 .hasArg(true)
-                .desc("client id ([REQUIRED] or use --interactionId)")
-                .required(false)
-                .build());
-        options.addOption(Option.builder("f")
-                .longOpt("file")
-                .hasArg(true)
-                .desc("[REQUIRED] one log-file or list of many log-files as input for log-parser")
-                .numberOfArgs(Option.UNLIMITED_VALUES)
+                .desc("output folder use --output or -o")
                 .required()
                 .build());
 
+        // TODO add rest stuff
+
         try {
-            CommandLine cmd = new DefaultParser().parse(options, args);
+            cmd = new DefaultParser().parse(options, args);
             if (cmd == null) {
                 throw new NullPointerException("cmd is null");
             }
@@ -45,25 +42,26 @@ public class ChunkyBoyoCli {
     public ChunkyBoyoConfig Configuration() {
         var bldr = ChunkyBoyoConfig.builder();
 
-        String sv; int i;
-        if (cmd.hasOption("bufferSize")) {
+        String sv;
+        int i;
+        if (cmd.hasOption("bs")) {
             sv = cmd.getOptionValue("bufferSize");
             i = Integer.parseInt(sv);
             bldr.bufferSize(i);
         }
 
-        if (cmd.hasOption("rowSize")) {
+        if (cmd.hasOption("rs")) {
             sv = cmd.getOptionValue("rowSize");
             i = Integer.parseInt(sv);
             bldr.rowsize(i);
         }
 
-        if (cmd.hasOption("outputFolder")) {
-            bldr.outputFolder(cmd.getOptionValue("outputFolder"));
+        if (cmd.hasOption("i")) {
+            bldr.outputFolder(cmd.getOptionValue("i"));
         }
 
-        if (cmd.hasOption("inputFolder")) {
-            bldr.outputFolder(cmd.getOptionValue("inputFolder"));
+        if (cmd.hasOption("o")) {
+            bldr.outputFolder(cmd.getOptionValue("o"));
         }
 
         return bldr.build();
