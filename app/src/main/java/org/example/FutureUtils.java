@@ -1,8 +1,6 @@
 package org.example;
 
-import java.util.List;
 import java.util.concurrent.*;
-import java.util.function.Function;
 
 public class FutureUtils {
     public static <T> T getFutureResult(Future<T> future) {
@@ -14,7 +12,7 @@ public class FutureUtils {
         }
     }
 
-    public static <T> CompletableFuture<T> futureToCompletable(Callable<T> callable, ExecutorService ec) {
+    public static <T> CompletableFuture<T> callableToCompletable(Callable<T> callable, ExecutorService ec) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return callable.call();

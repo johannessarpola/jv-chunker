@@ -1,5 +1,6 @@
 package org.example;
 
+import com.google.common.collect.Streams;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,56 +12,47 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 @Builder
 @AllArgsConstructor
-public class ReaderBoyo implements Callable<List<String>> {
+public class ReaderBoyo implements Callable<ReaderWrapper> {
 
     private final ChunkyBoyoConfig config;
     @Getter
     private ExecutorService threadPoolExecutor;
     @Getter
     @Builder.Default
-    private ArrayList<WrapperBoyo<List<String>>> wrapperBoyos = new ArrayList<>();
+    private ArrayList<WriterWrapper<List<String>>> wrapperBoyos = new ArrayList<>();
 
     @Override
-    public List<String> call() throws Exception {
-        List<List<WrapperBoyo<?>>> fus = new ArrayList<>();
+    public ReaderWrapper call() throws Exception {
+        List<CompletableFuture<List<WriterWrapper<Path>>>> fus = new ArrayList<>();
         // Specify the directory path
         Path directoryPath = Paths.get(config.inputFolder);
-
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directoryPath)) {
-            for (Path filePath : directoryStream) {
-                if (Files.isRegularFile(filePath)) {
-                    var sb = SplitterBoyo
-                            .builder()
-                            .chunkSize(this.config.getChunkSize())
-                            .threadPoolExecutor(this.getThreadPoolExecutor())
-                            .file(filePath)
-                            .outputPath(this.config.getOutputFolder())
-                            .build();
+            var cfs = Streams.stream(directoryStream.iterator())
+                    .filter(Files::isRegularFile)
+                    .map(this::initializeSplitter)
+                    .map( sb -> FutureUtils.callableToCompletable(sb, this.getThreadPoolExecutor()))
+                    .toList();
 
-                    var f = this.threadPoolExecutor.submit(sb);
-                    fus.add(f);
-                }
-            }
+            return new ReaderWrapper(cfs);
         } catch (IOException e) {
-            // Handle exceptions
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        return fus.stream()
-                .map(FutureUtils::getFutureResult)
-                .filter(Objects::nonNull)
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
     }
 
-
-
+    private SplitterBoyo initializeSplitter(Path filePath) {
+        var sb = SplitterBoyo
+                .builder()
+                .chunkSize(this.config.getChunkSize())
+                .threadPoolExecutor(this.getThreadPoolExecutor())
+                .file(filePath)
+                .outputPath(this.config.getOutputFolder())
+                .build();
+        return sb;
+    }
 }

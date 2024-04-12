@@ -2,7 +2,6 @@ package org.example;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,7 +11,7 @@ import java.util.concurrent.*;
 
 @Builder
 @AllArgsConstructor
-public class SplitterBoyo implements Callable<ArrayList<WrapperBoyo<Path>>> {
+public class SplitterBoyo implements Callable<List<WriterWrapper<Path>>> {
 
     @Builder.Default
     private int chunkSize = 10_000;
@@ -20,15 +19,11 @@ public class SplitterBoyo implements Callable<ArrayList<WrapperBoyo<Path>>> {
     private final String outputPath;
     private final ExecutorService threadPoolExecutor;
 
-    @Getter
-    @Builder.Default
-    private ArrayList<ProgressBoyo> progressBoyos = new ArrayList<>();
-
     @Override
-    public ArrayList<WrapperBoyo<Path>> call() throws Exception {
+    public List<WriterWrapper<Path>> call() throws Exception {
         // Specify the directory path
         var fis = new FileInputStream(this.file.toFile());
-        var fus = new ArrayList<WrapperBoyo<Path>>();
+        var fus = new ArrayList<WriterWrapper<Path>>();
 
         // default to total / poolSize
         if (chunkSize <= 0) {
@@ -80,16 +75,14 @@ public class SplitterBoyo implements Callable<ArrayList<WrapperBoyo<Path>>> {
 
     private void queueWriter(LinkedBlockingDeque<byte[]> chunk,
                              short threadNumber,
-                             Collection<WrapperBoyo<Path>> fus) {
+                             Collection<WriterWrapper<Path>> fus) {
         var wb = this.initializeWriter(chunk, this.file, ++threadNumber);
         fus.add(this.startWriter(wb));
     }
 
-    private WrapperBoyo<Path> startWriter(WriterBoyo wb) {
-
-        var cf = FutureUtils.futureToCompletable(wb, this.threadPoolExecutor);
-        this.progressBoyos.add(wb.getProgressBoyo());
-        return WrapperBoyo.<Path>builder()
+    private WriterWrapper<Path> startWriter(WriterBoyo wb) {
+        var cf = FutureUtils.callableToCompletable(wb, this.threadPoolExecutor);
+        return WriterWrapper.<Path>builder()
                 .progressBoyo(wb.getProgressBoyo())
                 .future(cf)
                 .build();
