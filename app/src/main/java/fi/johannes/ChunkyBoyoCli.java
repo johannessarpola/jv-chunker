@@ -1,4 +1,4 @@
-package org.example;
+package fi.johannes;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;

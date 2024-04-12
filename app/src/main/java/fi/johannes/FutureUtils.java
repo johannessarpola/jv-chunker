@@ -1,4 +1,4 @@
-package org.example;
+package fi.johannes;
 
 import java.util.concurrent.*;
 
