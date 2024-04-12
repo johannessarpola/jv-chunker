@@ -1,8 +1,7 @@
 package org.example;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 public class FutureUtils {
@@ -13,5 +12,15 @@ public class FutureUtils {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static <T> CompletableFuture<T> futureToCompletable(Callable<T> callable, ExecutorService ec) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return callable.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, ec);
     }
 }

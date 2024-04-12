@@ -2,6 +2,7 @@ package org.example;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -21,23 +22,25 @@ import java.util.stream.Collectors;
 public class ReaderBoyo implements Callable<List<String>> {
 
     private final ChunkyBoyoConfig config;
+    @Getter
     private ExecutorService threadPoolExecutor;
+    @Getter
+    @Builder.Default
+    private ArrayList<WrapperBoyo<List<String>>> wrapperBoyos = new ArrayList<>();
 
     @Override
     public List<String> call() throws Exception {
-        List<Future<List<String>>> fus = new ArrayList<>();
+        List<List<WrapperBoyo<?>>> fus = new ArrayList<>();
         // Specify the directory path
         Path directoryPath = Paths.get(config.inputFolder);
 
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directoryPath)) {
             for (Path filePath : directoryStream) {
                 if (Files.isRegularFile(filePath)) {
-                    // TODO Remove debug
-                    System.out.println("File: " + filePath.getFileName());
                     var sb = SplitterBoyo
                             .builder()
                             .chunkSize(this.config.getChunkSize())
-                            .threadPoolExecutor(this.threadPoolExecutor)
+                            .threadPoolExecutor(this.getThreadPoolExecutor())
                             .file(filePath)
                             .outputPath(this.config.getOutputFolder())
                             .build();
@@ -57,4 +60,7 @@ public class ReaderBoyo implements Callable<List<String>> {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
     }
+
+
+
 }

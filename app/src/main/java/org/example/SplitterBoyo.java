@@ -2,34 +2,33 @@ package org.example;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 
 import java.io.*;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 @Builder
 @AllArgsConstructor
-public class SplitterBoyo implements Callable<List<String>> {
+public class SplitterBoyo implements Callable<ArrayList<WrapperBoyo<Path>>> {
 
     @Builder.Default
     private int chunkSize = 10_000;
     private final Path file;
     private final String outputPath;
-    private ExecutorService threadPoolExecutor;
+    private final ExecutorService threadPoolExecutor;
+
+    @Getter
+    @Builder.Default
+    private ArrayList<ProgressBoyo> progressBoyos = new ArrayList<>();
 
     @Override
-    public List<String> call() throws Exception {
+    public ArrayList<WrapperBoyo<Path>> call() throws Exception {
         // Specify the directory path
         var fis = new FileInputStream(this.file.toFile());
-        var fus = new ArrayList<Future<Path>>();
+        var fus = new ArrayList<WrapperBoyo<Path>>();
 
         // default to total / poolSize
         if (chunkSize <= 0) {
@@ -38,7 +37,6 @@ public class SplitterBoyo implements Callable<List<String>> {
         }
 
         var chunk = new LinkedBlockingDeque<byte[]>(this.chunkSize);
-
         try {
             // Read whole file content
             // Split into smaller files
@@ -53,8 +51,7 @@ public class SplitterBoyo implements Callable<List<String>> {
                 // Send the chunk to writer
                 if (chunk.remainingCapacity() == 0) {
                     threadNumber++;
-                    var wb = this.createWriter(chunk, this.file, threadNumber);
-                    this.queueWriter(wb, fus);
+                    this.queueWriter(chunk, threadNumber, fus);
                     chunk = new LinkedBlockingDeque<>(this.chunkSize);
                 }
 
@@ -68,34 +65,37 @@ public class SplitterBoyo implements Callable<List<String>> {
             // write the tail
             var arr = byteArrayOutputStream.toByteArray();
             chunk.add(arr);
-            var wb = this.createWriter(chunk, this.file, ++threadNumber);
-            this.queueWriter(wb, fus);
+            this.queueWriter(chunk, threadNumber, fus);
 
         } catch (Exception e) {
             // Handle exceptions
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } finally {
             fis.close();
         }
 
-        return fus
-                .stream()
-                .map(pathFuture -> {
-                    try {
-                        return pathFuture.get().getFileName().toString();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }).collect(Collectors.toList());
+
+        return fus;
     }
 
-
-    private void queueWriter(WriterBoyo wb, List<Future<Path>> fus) {
-        var f = this.threadPoolExecutor.submit(wb);
-        fus.add(f);
+    private void queueWriter(LinkedBlockingDeque<byte[]> chunk,
+                             short threadNumber,
+                             Collection<WrapperBoyo<Path>> fus) {
+        var wb = this.initializeWriter(chunk, this.file, ++threadNumber);
+        fus.add(this.startWriter(wb));
     }
 
-    private <T> WriterBoyo createWriter(Deque<byte[]> chunk, Path fileName, short threadNumber) {
+    private WrapperBoyo<Path> startWriter(WriterBoyo wb) {
+
+        var cf = FutureUtils.futureToCompletable(wb, this.threadPoolExecutor);
+        this.progressBoyos.add(wb.getProgressBoyo());
+        return WrapperBoyo.<Path>builder()
+                .progressBoyo(wb.getProgressBoyo())
+                .future(cf)
+                .build();
+    }
+
+    private <T> WriterBoyo initializeWriter(Deque<byte[]> chunk, Path fileName, short threadNumber) {
         var fn = fileName.getFileName().toString();
         var base = fn.substring(0, fn.lastIndexOf('.'));
         var ext = fn.substring(fn.lastIndexOf('.') + 1);

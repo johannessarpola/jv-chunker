@@ -13,26 +13,22 @@ public class ProgressBoyo {
     @Builder.Default
     private long n = 0;
     @Builder.Default
-    private long nCheckpoint = 10_000;
-    @Builder.Default
     private long total = 0;
-    @Builder.Default
-    private String messageFormat = "written %d lines on %s thread";
+
+    private String currentThread()  {
+        return Thread.currentThread().getName();
+    }
     void tick() {
         n += 1;
-        var tn = Thread.currentThread().getName();
-        carriageReturn();
-        var pb = progressBar(tn, n, total);
-        System.out.print(pb);
     }
     private void carriageReturn() {
         System.out.print("\r");
     }
-    private String progressBar(String thread, long n, long total) {
+    public String progressBar() {
         double progress = (double) n / total * 100;
         StringBuilder sb = new StringBuilder();
 
-        sb.append(thread);
+        sb.append(this.currentThread());
         sb.append(" ");
         sb.append(String.format("%.2f ", progress));
         sb.append("%");
