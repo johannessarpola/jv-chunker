@@ -17,21 +17,15 @@ import java.util.function.Supplier;
 public class WriterBoyo implements Callable<Path> {
     private Path outputPath;
     private Deque<byte[]> source;
-    private ProgressBoyo pb;
 
     public WriterBoyo(Deque<byte[]> source, String path, String... paths) {
         this.source = source;
         this.outputPath = Paths.get(path, paths);
-        int checkPoints = Math.max(2, source.size() / 2);
-        pb = ProgressBoyo
-                .builder()
-                .nCheckpoint(checkPoints)
-                .build();
     }
 
     @Override
     public Path call() throws Exception {
-
+        var pb = initializeProgress();
         // Create direcotry if it does not exist
         if(!Files.isDirectory(this.outputPath.getParent())) {
             Files.createDirectory(this.outputPath.getParent());
@@ -45,5 +39,14 @@ public class WriterBoyo implements Callable<Path> {
         }
         fos.close();
         return outputPath;
+    }
+
+    private ProgressBoyo initializeProgress() {
+        int checkPoints = Math.max(2, source.size() / 2);
+        return ProgressBoyo
+                .builder()
+                .nCheckpoint(checkPoints)
+                .total(source.size())
+                .build();
     }
 }

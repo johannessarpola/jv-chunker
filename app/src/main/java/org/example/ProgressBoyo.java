@@ -17,6 +17,8 @@ public class ProgressBoyo {
     @Builder.Default
     private long nCheckpoint = 10_000;
     @Builder.Default
+    private long total = 0;
+    @Builder.Default
     private String messageFormat = "written %d lines on %s thread";
     void tick() {
         n += 1;
