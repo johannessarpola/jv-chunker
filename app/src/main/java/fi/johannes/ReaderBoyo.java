@@ -17,7 +17,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Builder
-@AllArgsConstructor
 public class ReaderBoyo implements Callable<ReaderWrapper> {
 
     private final ChunkyBoyoConfig config;

@@ -4,8 +4,14 @@
 package fi.johannes;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.System.exit;
 
@@ -16,18 +22,16 @@ public class App {
         var cli = new ChunkyBoyoCli(args);
         var conf = cli.asConfiguration();
         var ec = Executors.newFixedThreadPool(10);
-        var sb = new ReaderBoyo(conf, ec);
-        var f = ec.submit(sb);
+        var sb = ReaderBoyo.builder()
+                .config(conf)
+                .threadPoolExecutor(ec)
+                .build();
 
-        try {
-            var l = f.get();
-            Printer.println("Wrote following files: %s", String.join(",", l));
-            Printer.println("Took %d ms", System.currentTimeMillis() - statTime);
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        } finally {
-            ec.shutdown();
-        }
+        var cf = FutureUtils.callableToCompletable(sb, ec);
+
+        cf.join().getResult().forEach(listCompletableFuture -> listCompletableFuture.join().forEach(pathWriterWrapper -> pathWriterWrapper.getFuture().join()));
+
+        Printer.println("Took %d ms", System.currentTimeMillis() - statTime);
 
         exit(0);
 
