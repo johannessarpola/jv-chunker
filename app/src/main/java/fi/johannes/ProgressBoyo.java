@@ -11,24 +11,28 @@ import lombok.NoArgsConstructor;
 @Data
 public class ProgressBoyo {
     @Builder.Default
+    private boolean started = false;
+
+    @Builder.Default
+    private String threadName = "not-scheduled-yet";
+    private String outputPath;
+    @Builder.Default
     private long n = 0;
     @Builder.Default
     private long total = 0;
-
-    private String currentThread()  {
-        return Thread.currentThread().getName();
-    }
-    void tick() {
+    void tick(String threadName) {
+        this.threadName = threadName;
+        started = true;
         n += 1;
     }
-    private void carriageReturn() {
-        System.out.print("\r");
-    }
+
     public String progressBar() {
         double progress = (double) n / total * 100;
         StringBuilder sb = new StringBuilder();
 
-        sb.append(this.currentThread());
+        sb.append(this.threadName);
+        sb.append(" ");
+        sb.append(this.outputPath);
         sb.append(" ");
         sb.append(String.format("%.2f ", progress));
         sb.append("%");

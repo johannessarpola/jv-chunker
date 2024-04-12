@@ -1,44 +1,29 @@
 package fi.johannes;
 
 import com.google.common.collect.Streams;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 @Builder
-public class ReaderBoyo implements Callable<ReaderWrapper> {
+public class ReaderBoyo implements AutoCloseable {
 
     private final ChunkyBoyoConfig config;
-    @Getter
-    private ExecutorService threadPoolExecutor;
-    @Getter
-    @Builder.Default
-    private ArrayList<WriterWrapper<List<String>>> wrapperBoyos = new ArrayList<>();
 
-    @Override
-    public ReaderWrapper call() throws Exception {
-        List<CompletableFuture<List<WriterWrapper<Path>>>> fus = new ArrayList<>();
+    public List<SplitterBoyo> splitters() {
         // Specify the directory path
         Path directoryPath = Paths.get(config.inputFolder);
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directoryPath)) {
-            var cfs = Streams.stream(directoryStream.iterator())
+            // splits up each file in the directory
+            return Streams.stream(directoryStream.iterator())
                     .filter(Files::isRegularFile)
                     .map(this::initializeSplitter)
-                    .map( sb -> FutureUtils.callableToCompletable(sb, this.getThreadPoolExecutor()))
                     .toList();
-
-            return new ReaderWrapper(cfs);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -48,10 +33,15 @@ public class ReaderBoyo implements Callable<ReaderWrapper> {
         var sb = SplitterBoyo
                 .builder()
                 .chunkSize(this.config.getChunkSize())
-                .threadPoolExecutor(this.getThreadPoolExecutor())
+                .threadPoolExecutorSize(this.config.executorSize)
                 .file(filePath)
                 .outputPath(this.config.getOutputFolder())
                 .build();
         return sb;
+    }
+
+    @Override
+    public void close() throws Exception {
+        // nothing to do
     }
 }

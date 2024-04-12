@@ -11,24 +11,25 @@ import java.util.concurrent.*;
 
 @Builder
 @AllArgsConstructor
-public class SplitterBoyo implements Callable<List<WriterWrapper<Path>>> {
+public class SplitterBoyo implements Callable<List<WriterBoyo>>, AutoCloseable {
 
     @Builder.Default
     private int chunkSize = 10_000;
     private final Path file;
     private final String outputPath;
-    private final ExecutorService threadPoolExecutor;
+    private final int threadPoolExecutorSize;
+    private FileInputStream fis;
 
     @Override
-    public List<WriterWrapper<Path>> call() throws Exception {
+    public List<WriterBoyo> call() throws Exception {
         // Specify the directory path
-        var fis = new FileInputStream(this.file.toFile());
-        var fus = new ArrayList<WriterWrapper<Path>>();
+        fis = new FileInputStream(this.file.toFile());
+        var wbs = new ArrayList<WriterBoyo>();
 
         // default to total / poolSize
         if (chunkSize <= 0) {
             // Prettu ugly
-            this.chunkSize = Files.readAllLines(this.file).size() % ((ThreadPoolExecutor) this.threadPoolExecutor).getPoolSize();
+            this.chunkSize = Files.readAllLines(this.file).size() % threadPoolExecutorSize;
         }
 
         var chunk = new LinkedBlockingDeque<byte[]>(this.chunkSize);
@@ -38,15 +39,14 @@ public class SplitterBoyo implements Callable<List<WriterWrapper<Path>>> {
             // -> Create WriterBoyo to write the chunk
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             int byteRead;
-            short threadNumber = 0;
+            short workerNumber = 0;
 
             while ((byteRead = fis.read()) != -1) {
                 byteArrayOutputStream.write(byteRead);
 
                 // Send the chunk to writer
                 if (chunk.remainingCapacity() == 0) {
-                    threadNumber++;
-                    this.queueWriter(chunk, threadNumber, fus);
+                    wbs.add(this.initializeWriter(chunk, this.file, ++workerNumber));
                     chunk = new LinkedBlockingDeque<>(this.chunkSize);
                 }
 
@@ -60,32 +60,15 @@ public class SplitterBoyo implements Callable<List<WriterWrapper<Path>>> {
             // write the tail
             var arr = byteArrayOutputStream.toByteArray();
             chunk.add(arr);
-            this.queueWriter(chunk, threadNumber, fus);
+            wbs.add(this.initializeWriter(chunk, this.file, ++workerNumber));
+
 
         } catch (Exception e) {
             // Handle exceptions
             throw new RuntimeException(e);
-        } finally {
-            fis.close();
         }
 
-
-        return fus;
-    }
-
-    private void queueWriter(LinkedBlockingDeque<byte[]> chunk,
-                             short threadNumber,
-                             Collection<WriterWrapper<Path>> fus) {
-        var wb = this.initializeWriter(chunk, this.file, ++threadNumber);
-        fus.add(this.startWriter(wb));
-    }
-
-    private WriterWrapper<Path> startWriter(WriterBoyo wb) {
-        var cf = FutureUtils.callableToCompletable(wb, this.threadPoolExecutor);
-        return WriterWrapper.<Path>builder()
-                .progressBoyo(wb.getProgressBoyo())
-                .future(cf)
-                .build();
+        return wbs;
     }
 
     private <T> WriterBoyo initializeWriter(Deque<byte[]> chunk, Path fileName, short threadNumber) {
@@ -95,5 +78,10 @@ public class SplitterBoyo implements Callable<List<WriterWrapper<Path>>> {
         var nfn = String.format("%s_%d.%s", base, threadNumber, ext);
         var wb = new WriterBoyo(chunk, this.outputPath, nfn);
         return wb;
+    }
+
+    @Override
+    public void close() throws Exception {
+        fis.close();
     }
 }
