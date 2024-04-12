@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Builder
-public class ReaderBoyo implements AutoCloseable {
+public class ReaderBoyo {
 
     private final ChunkyBoyoConfig config;
 
@@ -40,8 +40,4 @@ public class ReaderBoyo implements AutoCloseable {
         return sb;
     }
 
-    @Override
-    public void close() throws Exception {
-        // nothing to do
-    }
 }

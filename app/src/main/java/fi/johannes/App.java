@@ -18,32 +18,36 @@ public class App {
 
         var cli = new ChunkyBoyoCli(args);
         var conf = cli.asConfiguration();
-        var ec = Executors.newFixedThreadPool(conf.executorSize);
+
         var reader = ReaderBoyo.builder()
                 .config(conf)
                 .build();
-        try {
-            var pbs = new ArrayList<ProgressBoyo>();
-            var splitters = reader.splitters();
-            var splitterJobs = new ArrayList<CompletableFuture<Void>>(splitters.size());
-            for (var splitter : splitters) {
 
+        try (var ec = Executors.newFixedThreadPool(conf.executorSize)) {
+            AtomicBoolean printCancelSignal = new AtomicBoolean(false);
+
+            var splitters = reader.splitters();
+            var progressBoyos = new ArrayList<ProgressBoyo>();
+            var splitterJobs = new ArrayList<CompletableFuture<Void>>(splitters.size());
+            // print on the side thread
+            if (conf.verbose) {
+                var printerBoyo = PrinterBoyo
+                        .builder()
+                        .cancelSignal(printCancelSignal)
+                        .updateIntervalMs(50)
+                        .progressBoyos(progressBoyos)
+                        .build();
+                CompletableFuture.runAsync(printerBoyo, ec);
+            }
+
+            for (var splitter : splitters) {
                 var sf = CompletableFuture.runAsync(() -> {
 
                     var wbsf = FutureUtils.callableToCompletable(splitter, ec);
-                    AtomicBoolean splitterDone = new AtomicBoolean(true);
-                    if (conf.verbose) {
-                        var prnt = PrinterBoyo.builder()
-                                .progressBoyos(pbs)
-                                .build();
-                        var ignored = prnt.run(splitterDone, ec);
-                    }
-
-
                     var splitProcess = wbsf.thenApply(writerBoyos -> {
                         // gather progressboyos
                         for (var wb : writerBoyos) {
-                            pbs.add(wb.getProgressBoyo());
+                            progressBoyos.add(wb.getProgressBoyo());
                         }
                         return writerBoyos.stream().map(f -> FutureUtils.callableToCompletable(f, ec)).toList();
                     });
@@ -52,23 +56,21 @@ public class App {
                     for (var f : v) {
                         f.join();
                     }
-                    splitterDone.set(false);
 
                 });
                 splitterJobs.add(sf);
             }
 
             splitterJobs.forEach(CompletableFuture::join);
+            printCancelSignal.set(true);
 
+            ec.shutdown();
+            ec.awaitTermination(1, TimeUnit.MINUTES);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-
-        ec.shutdown();
-        var r = ec.awaitTermination(1, TimeUnit.MINUTES);
         Printer.println("Took %d ms", System.currentTimeMillis() - statTime);
-
         exit(0);
 
     }

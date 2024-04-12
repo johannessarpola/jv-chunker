@@ -4,36 +4,40 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @AllArgsConstructor
 @Builder
-public class PrinterBoyo {
+public class PrinterBoyo implements Runnable {
 
     @Builder.Default
-    private final int waitMs = 250;
+    private final int updateIntervalMs = 250;
+    @Builder.Default
+    private final int refreshMs = 5;
     private final List<ProgressBoyo> progressBoyos;
+    private final AtomicBoolean cancelSignal;
 
-    public CompletableFuture<Void> run(AtomicBoolean cancelSignal, ExecutorService ec) {
-        return CompletableFuture.runAsync(() -> {
-            while (cancelSignal.get()) {
-                System.out.print("\r");
-                StringBuilder sb = new StringBuilder();
-                for (var pb : progressBoyos) {
-                    if (pb.isStarted()) {
-                        sb.append(pb.progressBar());
-                    }
-                }
-                System.out.println(sb);
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+    @Override
+    public void run() {
+        do {
+            StringBuilder sb = new StringBuilder();
+            for (var pb : progressBoyos) {
+                if (pb.isStarted()) {
+                    sb.append(pb.progressBar());
                 }
             }
-        }, ec);
+            if(!sb.isEmpty()) {
+                System.out.print("\r");
+                System.out.println(sb);
+            }
+            try {
+               if(!progressBoyos.isEmpty()) {
+                   Thread.sleep(updateIntervalMs);
+               }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } while (!cancelSignal.get());
     }
 
 }
