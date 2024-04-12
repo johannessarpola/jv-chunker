@@ -10,16 +10,12 @@ import java.nio.file.Paths;
 @Builder
 @AllArgsConstructor
 public class ChunkyBoyoConfig {
-    int chunkSize;
+    @Builder.Default
+    int executorSize = 10;
+    @Builder.Default
+    int chunkSize = 100;
     String outputFolder;
     String inputFolder;
-
-    // Some default configs
-//    public ChunkyBoyoConfig() {
-//        var user_dir = System.getProperty("user.dir");
-//        bufferSize = 100000000;
-//        rowsize = 25000;
-//        outputFolder = Paths.get(user_dir, "/chunks/");
-//        inputFolder = Paths.get(user_dir, "/raw/");
-//    }
+    @Builder.Default
+    boolean verbose = false;
 }

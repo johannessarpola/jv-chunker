@@ -27,12 +27,21 @@ public class ChunkyBoyoCli {
                 .longOpt("chunkSize")
                 .hasArg(true)
                 .desc("chunks to divide to use --chunkSize or -cs")
-                .required()
+                .required(false)
+                .build());
+        options.addOption(Option.builder("t")
+                .longOpt("threads")
+                .hasArg(true)
+                .desc("how many, use --threads or -t")
+                .required(false)
                 .build());
 
-
-
-        // TODO add rest stuff
+        options.addOption(Option.builder("v")
+                .longOpt("verbose")
+                .hasArg(false)
+                .desc("verbose use --verbose or -v")
+                .required(false)
+                .build());
 
         try {
             cmd = new DefaultParser().parse(options, args);
@@ -62,6 +71,16 @@ public class ChunkyBoyoCli {
 
         if (cmd.hasOption("o")) {
             bldr.outputFolder(cmd.getOptionValue("o"));
+        }
+
+        if (cmd.hasOption("t")) {
+            sv = cmd.getOptionValue("t");
+            i = Integer.parseInt(sv);
+            bldr.executorSize(i);
+        }
+
+        if (cmd.hasOption("v")) {
+            bldr.verbose(true);
         }
 
         return bldr.build();
