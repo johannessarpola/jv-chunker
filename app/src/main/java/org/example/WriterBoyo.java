@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 public class WriterBoyo implements Callable<Path> {
     private Path outputPath;
     private Deque<byte[]> source;
+    private ProgressBoyo pb;
 
     public WriterBoyo(Deque<byte[]> source, String path, String... paths) {
         this.source = source;
@@ -25,7 +26,7 @@ public class WriterBoyo implements Callable<Path> {
 
     @Override
     public Path call() throws Exception {
-        var pb = initializeProgress();
+        pb = initializeProgress();
         // Create direcotry if it does not exist
         if(!Files.isDirectory(this.outputPath.getParent())) {
             Files.createDirectory(this.outputPath.getParent());
