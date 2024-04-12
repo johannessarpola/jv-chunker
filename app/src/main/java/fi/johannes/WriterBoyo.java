@@ -28,12 +28,13 @@ public class WriterBoyo implements Callable<Path> {
         if (!Files.isDirectory(this.outputPath.getParent())) {
             Files.createDirectory(this.outputPath.getParent());
         }
+        var currentThreadName = Thread.currentThread().getName();
 
         try (var fos = new FileOutputStream(this.outputPath.toFile(), false)) {
             byte[] b;
             while ((b = source.poll()) != null) {
+                progressBoyo.tick(currentThreadName);
                 fos.write(b);
-                progressBoyo.tick(Thread.currentThread().getName());
             }
             return outputPath;
         } catch (Exception e) {

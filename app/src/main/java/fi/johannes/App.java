@@ -25,36 +25,36 @@ public class App {
 
         try (var ec = Executors.newFixedThreadPool(conf.executorSize)) {
             AtomicBoolean printCancelSignal = new AtomicBoolean(false);
+            var printerBoyo = PrinterBoyo.builder()
+                    .cancelSignal(printCancelSignal)
+                    .updateIntervalMs(50)
+                    .build();
 
             var splitters = reader.splitters();
-            var progressBoyos = new ArrayList<ProgressBoyo>();
             var splitterJobs = new ArrayList<CompletableFuture<Void>>(splitters.size());
-            // print on the side thread
+
             if (conf.verbose) {
-                var printerBoyo = PrinterBoyo
-                        .builder()
-                        .cancelSignal(printCancelSignal)
-                        .updateIntervalMs(50)
-                        .progressBoyos(progressBoyos)
-                        .build();
                 CompletableFuture.runAsync(printerBoyo, ec);
             }
-
             for (var splitter : splitters) {
                 var sf = CompletableFuture.runAsync(() -> {
 
                     var wbsf = FutureUtils.callableToCompletable(splitter, ec);
                     var splitProcess = wbsf.thenApply(writerBoyos -> {
-                        // gather progressboyos
-                        for (var wb : writerBoyos) {
-                            progressBoyos.add(wb.getProgressBoyo());
+                        var progressBoyos = writerBoyos.stream().map(WriterBoyo::getProgressBoyo).toList();
+                        // print on the side thread
+                        if(conf.verbose) {
+                            printerBoyo.addProgessBoyos(progressBoyos);
                         }
                         return writerBoyos.stream().map(f -> FutureUtils.callableToCompletable(f, ec)).toList();
                     });
 
                     var v = splitProcess.join();
                     for (var f : v) {
-                        f.join();
+                        var p =f.join();
+                        if(conf.verbose) {
+                            printerBoyo.completedTask(p);
+                        }
                     }
 
                 });
