@@ -19,6 +19,11 @@ public class ReaderBoyo {
         // Specify the directory path
         Path directoryPath = Paths.get(config.inputFolder);
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directoryPath)) {
+            // Create direcotry if it does not exist
+            var p = Paths.get(this.config.outputFolder);
+            if (!Files.isDirectory(p)) {
+                Files.createDirectory(p);
+            }
             // splits up each file in the directory
             return Streams.stream(directoryStream.iterator())
                     .filter(Files::isRegularFile)

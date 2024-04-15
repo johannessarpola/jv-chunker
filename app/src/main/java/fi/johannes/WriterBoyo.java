@@ -24,10 +24,6 @@ public class WriterBoyo implements Callable<Path> {
 
     @Override
     public Path call() throws Exception {
-        // Create direcotry if it does not exist
-        if (!Files.isDirectory(this.outputPath.getParent())) {
-            Files.createDirectory(this.outputPath.getParent());
-        }
         var currentThreadName = Thread.currentThread().getName();
 
         try (var fos = new FileOutputStream(this.outputPath.toFile(), false)) {
