@@ -41,9 +41,9 @@ public class App {
 
                     var wbsf = FutureUtils.callableToCompletable(splitter, ec);
                     var splitProcess = wbsf.thenApply(writerBoyos -> {
-                        var progressBoyos = writerBoyos.stream().map(WriterBoyo::getProgressBoyo).toList();
                         // print on the side thread
                         if(conf.verbose) {
+                            var progressBoyos = writerBoyos.stream().map(WriterBoyo::getProgressBoyo).toList();
                             printerBoyo.addProgessBoyos(progressBoyos);
                         }
                         return writerBoyos.stream().map(f -> FutureUtils.callableToCompletable(f, ec)).toList();
