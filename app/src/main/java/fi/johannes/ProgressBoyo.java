@@ -25,27 +25,4 @@ public class ProgressBoyo {
         started = true;
         n += 1;
     }
-
-    public String progressBar() {
-        double progress = (double) n / total * 100;
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(this.threadName);
-        sb.append(" ");
-        sb.append(this.outputPath);
-        sb.append(" ");
-        sb.append(String.format("%.2f ", progress));
-        sb.append("%");
-        sb.append(" ");
-        sb.append(String.format("of total %d", total));
-        for (int i = 0; i < total; i++) {
-            if(i <= n) {
-                sb.append("=");
-            } else {
-                sb.append(" ");
-            }
-        }
-        sb.append("|\n");
-        return sb.toString();
-    }
 }

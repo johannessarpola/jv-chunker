@@ -50,7 +50,7 @@ public class PrinterBoyo implements Runnable {
         StringBuilder sb = new StringBuilder();
         for (var pb : progressBoyos) {
             if (pb.isStarted()) {
-                sb.append(pb.progressBar());
+                sb.append(progressBar(pb));
             }
         }
         if (!sb.isEmpty()) {
@@ -71,4 +71,30 @@ public class PrinterBoyo implements Runnable {
         } while (!cancelSignal.get());
     }
 
+    public String progressBar(ProgressBoyo pb) {
+        var progressElements = 10;
+        var total = pb.getTotal();
+        var n = pb.getN();
+        double progress = (double) n / total * 100;
+        var ceiled = Math.ceil(progress) / progressElements;
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(pb.getThreadName());
+        sb.append(" ");
+        sb.append(pb.getOutputPath());
+        sb.append(" ");
+        sb.append(String.format("%.2f ", progress));
+        sb.append("%");
+        sb.append(" ");
+        sb.append(String.format("of total %d |", total));
+        for (int i = 0; i < progressElements; i++) {
+            if(i <= ceiled - 1) {
+                sb.append("=");
+            } else {
+                sb.append(" ");
+            }
+        }
+        sb.append("|\n");
+        return sb.toString();
+    }
 }
