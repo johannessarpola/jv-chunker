@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 @Data
 @Builder
 @AllArgsConstructor
@@ -14,8 +12,12 @@ public class ChunkyBoyoConfig {
     int executorSize = 10;
     @Builder.Default
     int chunkSize = 100;
-    String outputFolder;
-    String inputFolder;
+    @Builder.Default
+    String outputFolder = ".out";
+    @Builder.Default
+    String inputFolder = ".in";
+    @Builder.Default
+    String separator = System.lineSeparator();
     @Builder.Default
     boolean verbose = false;
 }

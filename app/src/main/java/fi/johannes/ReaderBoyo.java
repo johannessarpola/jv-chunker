@@ -34,6 +34,7 @@ public class ReaderBoyo {
                 .builder()
                 .chunkSize(this.config.getChunkSize())
                 .threadPoolExecutorSize(this.config.executorSize)
+                .separator(this.config.separator)
                 .file(filePath)
                 .outputPath(this.config.getOutputFolder())
                 .build();

@@ -12,17 +12,21 @@ import lombok.NoArgsConstructor;
 public class ProgressBoyo {
     @Builder.Default
     private boolean started = false;
-
     @Builder.Default
-    private String threadName = "not-scheduled-yet";
-    private String outputPath;
+    private String threadName = "";
+    @Builder.Default
+    private String outputPath = "";
     @Builder.Default
     private long n = 0;
     @Builder.Default
     private long total = 0;
     void tick(String threadName) {
-        this.threadName = threadName;
-        started = true;
+        if(this.threadName == null) {
+            this.threadName = threadName;
+        }
+        if(!started) {
+            started = true;
+        }
         n += 1;
     }
 }

@@ -18,6 +18,7 @@ public class SplitterBoyo implements Callable<List<WriterBoyo>> {
     private final Path file;
     private final String outputPath;
     private final int threadPoolExecutorSize;
+    private final String separator;
     private FileInputStream fis;
 
     @Override
@@ -41,6 +42,7 @@ public class SplitterBoyo implements Callable<List<WriterBoyo>> {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             int byteRead;
             short workerNumber = 0;
+            int separator = CharUtils.decodeSeparator(this.separator).charAt(0);
 
             while ((byteRead = fis.read()) != -1) {
                 byteArrayOutputStream.write(byteRead);
@@ -51,8 +53,8 @@ public class SplitterBoyo implements Callable<List<WriterBoyo>> {
                     chunk = new LinkedBlockingDeque<>(this.chunkSize);
                 }
 
-                // TODO There's no failsafe if there is no \n in the input
-                if (byteRead == '\n') {
+                // Separator can only be a byte for now
+                if (byteRead == separator) {
                     chunk.add(byteArrayOutputStream.toByteArray());
                     byteArrayOutputStream.reset();
                 }

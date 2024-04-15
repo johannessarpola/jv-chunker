@@ -36,6 +36,13 @@ public class ChunkyBoyoCli {
                 .required(false)
                 .build());
 
+        options.addOption(Option.builder("s")
+                .longOpt("separator")
+                .hasArg(true)
+                .desc("with what character to split rows, use --separator or -s")
+                .required(false)
+                .build());
+
         options.addOption(Option.builder("v")
                 .longOpt("verbose")
                 .hasArg(false)
@@ -77,6 +84,11 @@ public class ChunkyBoyoCli {
             sv = cmd.getOptionValue("t");
             i = Integer.parseInt(sv);
             bldr.executorSize(i);
+        }
+
+        if (cmd.hasOption("s")) {
+            sv = cmd.getOptionValue("s");
+            bldr.separator(sv);
         }
 
         if (cmd.hasOption("v")) {
