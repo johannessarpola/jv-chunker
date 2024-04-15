@@ -1,3 +1,3 @@
 # Chunker
 
-Divides a file into many files based on rows
+Divides a files in folder into many files based on number of rows
